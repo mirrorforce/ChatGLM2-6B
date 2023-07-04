@@ -4,7 +4,7 @@
 🤗 <a href="https://huggingface.co/THUDM/chatglm2-6b" target="_blank">HF Repo</a> • 🐦 <a href="https://twitter.com/thukeg" target="_blank">Twitter</a> • 📃 <a href="https://arxiv.org/abs/2103.10360" target="_blank">[GLM@ACL 22]</a> <a href="https://github.com/THUDM/GLM" target="_blank">[GitHub]</a> • 📃 <a href="https://arxiv.org/abs/2210.02414" target="_blank">[GLM-130B@ICLR 23]</a> <a href="https://github.com/THUDM/GLM-130B" target="_blank">[GitHub]</a> <br>
 </p>
 <p align="center">
-    👋 加入我们的 <a href="https://join.slack.com/t/chatglm/shared_invite/zt-1udqapmrr-ocT1DS_mxWe6dDY8ahRWzg" target="_blank">Slack</a> 和 <a href="resources/WECHAT.md" target="_blank">WeChat</a>
+    👋 加入我们的 <a href="https://join.slack.com/t/chatglm/shared_invite/zt-1y7pqoloy-9b1g6T6JjA8J0KxvUjbwJw" target="_blank">Slack</a> 和 <a href="resources/WECHAT.md" target="_blank">WeChat</a>
 </p>
 
 *Read this in [English](README_EN.md)*
@@ -23,6 +23,9 @@ ChatGLM**2**-6B 是开源中英双语对话模型 [ChatGLM-6B](https://github.co
 ChatGLM2-6B 开源模型旨在与开源社区一起推动大模型技术发展，恳请开发者和大家遵守[开源协议](MODEL_LICENSE)，勿将开源模型和代码及基于开源项目产生的衍生物用于任何可能给国家和社会带来危害的用途以及用于任何未经过安全评估和备案的服务。**目前，本项目团队未基于 ChatGLM2-6B 开发任何应用，包括网页端、安卓、苹果 iOS 及 Windows App 等应用。**
 
 尽管模型在训练的各个阶段都尽力确保数据的合规性和准确性，但由于 ChatGLM2-6B 模型规模较小，且模型受概率随机性因素影响，无法保证输出内容的准确性，且模型易被误导。**本项目不承担开源模型和代码导致的数据安全、舆情风险或发生任何模型被误导、滥用、传播、不当利用而产生的风险和责任。**
+
+## 更新信息
+**[2023/07/04]** 发布 P-Tuning v2 与 全参数微调脚本，参见 [P-Tuning](./ptuning)。
 
 ## 友情链接
 对 ChatGLM2 进行加速的开源项目：
