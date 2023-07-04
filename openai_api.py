@@ -34,6 +34,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# langchain openai need this parameter
+_usage = {
+    "prompt_tokens": 0,
+    "completion_tokens": 0,
+    "total_tokens": 0
+}
+
+    
 class ModelCard(BaseModel):
     id: str
     object: str = "model"
@@ -66,25 +74,35 @@ class ChatCompletionRequest(BaseModel):
     top_p: Optional[float] = None
     max_length: Optional[int] = None
     stream: Optional[bool] = False
+    stop: Optional[Union[str, List[str]]]
 
 
 class ChatCompletionResponseChoice(BaseModel):
     index: int
     message: ChatMessage
-    finish_reason: Literal["stop", "length"]
+    finish_reason: Union[Literal["stop", "length"], str]
 
 
 class ChatCompletionResponseStreamChoice(BaseModel):
     index: int
     delta: DeltaMessage
-    finish_reason: Optional[Literal["stop", "length"]]
+    finish_reason: Union[Literal["stop", "length"], str]
 
+
+class usage(BaseModel):
+    """
+    langchain openai request need this parameter
+    """
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    total_tokens: int = 0
 
 class ChatCompletionResponse(BaseModel):
     model: str
     object: Literal["chat.completion", "chat.completion.chunk"]
     choices: List[Union[ChatCompletionResponseChoice, ChatCompletionResponseStreamChoice]]
     created: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    usage: usage
 
 
 @app.get("/v1/models", response_model=ModelList)
@@ -116,15 +134,27 @@ async def create_chat_completion(request: ChatCompletionRequest):
         generate = predict(query, history, request.model)
         return StreamingResponse(generate, media_type="text/event-stream")
 
+    print(query)
+    # print(history)
     response, _ = model.chat(tokenizer, query, history=history)
+
+    finish_reason = "stop"
+
+    if request.stop and type(request.stop) == list:
+        for _stop in request.stop:
+            if _stop in response:
+                response = response.split(_stop)[0]
+                finish_reason = _stop
+
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=ChatMessage(role="assistant", content=response),
-        finish_reason="stop"
+        finish_reason=finish_reason
     )
 
-    return ChatCompletionResponse(model=request.model, choices=[choice_data], object="chat.completion")
+    print(choice_data)
 
+    return ChatCompletionResponse(model=request.model, choices=[choice_data], object="chat.completion", usage=_usage)
 
 async def predict(query: str, history: List[List[str]], model_id: str):
     global model, tokenizer
@@ -161,6 +191,67 @@ async def predict(query: str, history: List[List[str]], model_id: str):
     )
     chunk = ChatCompletionResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")
     yield "data: {}\n\n".format(chunk.json(exclude_unset=True, ensure_ascii=False))
+
+
+class CompletionResponseChoice(BaseModel):
+    text: str
+    index: int = 0
+    logprobs: Optional[int] = 0
+    finish_reason: Union[Literal["stop", "length"], str]
+
+
+class CompletionRequest(BaseModel):
+    prompt: List[str]
+    model: Optional[str] = "chatGLM2-6B"
+    max_tokens: Optional[int] = 2048
+    temperature: Optional[float] = 0.95
+    top_p: Optional[float] = 0.7
+    n: Optional[int] = 1
+    stream: Optional[bool] = False
+    logprobs: Optional[int] = 0
+    stop: Optional[Union[str, List[str]]]
+
+class CompletionResponse(BaseModel):
+    id: str = "chatGLM2-6B"
+    model: str = "chatGLM2-6B"
+    object: Union[Literal["stop", "length"], str]
+    choices: List[CompletionResponseChoice]
+    created: Optional[int] = Field(default_factory=lambda: int(time.time()))
+    usage: usage
+
+
+@app.post("/v1/completions", response_model=CompletionResponse)
+async def create_completion(request: CompletionRequest):
+    global model, tokenizer
+    # if request.messages[-1].role != "user":
+    #     raise HTTPException(status_code=400, detail="Invalid request")
+    query = request.prompt[-1]
+    # max_tokens = request.max_tokens
+    # temperature = request.temperature
+    # top_p = request.top_p
+    # n = request.n
+
+    print(query)
+    response, _ = model.chat(tokenizer, query, history=[])
+
+    finish_reason = "stop"
+
+    if request.stop and type(request.stop) == list:
+        for _stop in request.stop:
+            if _stop in response:
+                response = response.split(_stop)[0]
+                finish_reason = _stop
+
+        
+    choice_data = CompletionResponseChoice(
+        text=response,
+        finish_reason=finish_reason
+    )
+
+    print(choice_data)
+
+    return CompletionResponse(choices=[choice_data], object=finish_reason, usage=_usage)
+
 
 
 if __name__ == "__main__":

@@ -1,0 +1,8 @@
+__pycache__
+.vscode
+faiss_index
+my_feature_repo
+venv
+.editorconfig
+
+LLM-Tuning
